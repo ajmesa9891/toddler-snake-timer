@@ -117,6 +117,7 @@
         // --- Audio Setup (Tone.js) ---
         let alarmSynth;
         let yummyPlayer;
+	      let bitePlayer;
 
         function setupAudio() {
             if (Tone.context.state !== 'running') {
@@ -131,7 +132,13 @@
             // NEW: Initialize Tone.Player with a CORS-friendly URL
             if (!yummyPlayer) {
                 yummyPlayer = new Tone.Player({
-                    url: "https://raw.githubusercontent.com/iamshaunjp/babylonjs-tutorial/lesson-20/public/sounds/yummy.mp3",
+                    url: "./roblox-yummy.mp3",
+                    autostart: false,
+                }).toDestination();
+            }
+            if (!bitePlayer) {
+                bitePlayer = new Tone.Player({
+                    url: "./bite.mp3",
                     autostart: false,
                 }).toDestination();
             }
@@ -163,6 +170,20 @@
                 yummyPlayer.start();
             } else {
                 console.log("Yummy sound is not loaded yet. It will play once it loads.");
+            }
+        }
+      
+        function playBiteSound() {
+            console.log("playBiteSound called");
+            if (!bitePlayer) {
+                console.log("Setting up bitePlayer for the first time.");
+                setupAudio();
+            }
+            if (bitePlayer.loaded) {
+                console.log("bitePlayer sound is loaded, playing now.");
+                bitePlayer.start();
+            } else {
+                console.log("bitePlayer sound is not loaded yet. It will play once it loads.");
             }
         }
 
@@ -360,6 +381,8 @@
                     fish.eaten = true;
                     if (fish.isBig) {
                         playYummySound();
+                    } else {
+                        playBiteSound();
                     }
                 }
                 if (!fish.eaten) {
@@ -506,5 +529,7 @@
         });
 
     </script>
+
+<script src="https://static.app/js/static.js" type="text/javascript"></script>
 </body>
 </html>
