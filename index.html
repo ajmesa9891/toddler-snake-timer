@@ -52,7 +52,7 @@
 
     <!-- Selection Screen -->
     <div id="selection-screen" class="screen visible p-4 sm:p-8">
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 w-full max-w-sm sm:max-w-4xl mx-auto">
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-4 sm:gap-4 w-full max-w-sm sm:max-w-5xl mx-auto">
             <div id="timer-30" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
                 <canvas id="canvas-30"></canvas>
             </div>
@@ -67,6 +67,9 @@
             </div>
             <div id="timer-180" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
                 <canvas id="canvas-180"></canvas>
+            </div>
+            <div id="timer-custom" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
+                <canvas id="canvas-custom"></canvas>
             </div>
         </div>
     </div>
@@ -86,18 +89,57 @@
         </div>
     </div>
 
+    <!-- Custom Timer Dialog -->
+    <dialog id="custom-timer-dialog" class="p-6 rounded-lg shadow-xl bg-yellow-100 border-4 border-yellow-300">
+        <form method="dialog" class="flex flex-col items-center space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Custom Timer</h2>
+            <div class="flex flex-col items-center space-y-2">
+                <label for="minutes-input" class="text-lg font-semibold text-gray-700">Enter minutes:</label>
+                <input 
+                    type="number" 
+                    id="minutes-input" 
+                    min="1" 
+                    value="5" 
+                    class="w-20 p-2 text-center text-xl font-bold border-2 border-yellow-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                    autofocus
+                >
+            </div>
+            <div class="flex space-x-4 mt-4">
+                <button 
+                    type="button" 
+                    id="start-custom-timer" 
+                    class="px-6 py-2 bg-green-500 text-white font-bold rounded-lg hover:bg-green-600 transition-colors"
+                >
+                    Start Timer
+                </button>
+                <button 
+                    type="button" 
+                    id="cancel-custom-timer" 
+                    class="px-6 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </dialog>
+
     <script>
         // --- DOM Elements ---
         const selectionScreen = document.getElementById('selection-screen');
         const timerScreen = document.getElementById('timer-screen');
         const endScreen = document.getElementById('end-screen');
+        const customTimerDialog = document.getElementById('custom-timer-dialog');
+        const minutesInput = document.getElementById('minutes-input');
+        const startCustomTimerBtn = document.getElementById('start-custom-timer');
+        const cancelCustomTimerBtn = document.getElementById('cancel-custom-timer');
 
         const timerButtons = [
             { id: 'timer-30', duration: 30, canvasId: 'canvas-30', color: '#FBBF24' }, // Amber Yellow
             { id: 'timer-60', duration: 60, canvasId: 'canvas-60', color: '#4ADE80' }, // Green
             { id: 'timer-90', duration: 90, canvasId: 'canvas-90', color: '#60A5FA' },   // Blue
             { id: 'timer-120', duration: 120, canvasId: 'canvas-120', color: '#F87171' }, // Red
-            { id: 'timer-180', duration: 180, canvasId: 'canvas-180', color: '#A855F7' } // Purple
+            { id: 'timer-180', duration: 180, canvasId: 'canvas-180', color: '#A855F7' }, // Purple
+            { id: 'timer-custom', duration: 0, canvasId: 'canvas-custom', color: '#EC4899', isCustom: true } // Pink
         ];
         
         const timerCanvas = document.getElementById('timer-canvas');
@@ -267,15 +309,20 @@
 
             // Add timer duration text in the center
             const duration = getDurationFromCanvasId(canvasId);
-            if (duration) {
-                let displayText;
+            let displayText;
+            
+            if (canvasId === 'canvas-custom') {
+                displayText = "?m";
+            } else if (duration) {
                 if (duration === 30) {
                     displayText = "30s";
                 } else {
                     const minutes = duration / 60;
                     displayText = minutes % 1 === 0 ? `${minutes}m` : `${minutes}m`;
                 }
-                
+            }
+            
+            if (displayText) {
                 ctx.fillStyle = color;
                 ctx.font = `bold ${size * 0.15}px Arial`;
                 ctx.textAlign = 'center';
@@ -521,15 +568,51 @@
             selectionScreen.classList.add('visible');
         }
 
+        function openCustomTimerDialog() {
+            minutesInput.value = 5; // Reset to default value
+            customTimerDialog.showModal();
+            minutesInput.focus();
+        }
+
         // --- Event Listeners ---
         timerButtons.forEach(button => {
             document.getElementById(button.id).addEventListener('click', () => {
-                startTimer(button.duration, button.color);
+                if (button.isCustom) {
+                    openCustomTimerDialog();
+                } else {
+                    startTimer(button.duration, button.color);
+                }
             });
             document.getElementById(button.id).addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                startTimer(button.duration, button.color);
+                if (button.isCustom) {
+                    openCustomTimerDialog();
+                } else {
+                    startTimer(button.duration, button.color);
+                }
             }, { passive: false });
+        });
+
+        // Custom timer dialog event listeners
+        startCustomTimerBtn.addEventListener('click', () => {
+            const minutes = parseInt(minutesInput.value);
+            if (minutes >= 1) {
+                const duration = minutes * 60;
+                const customButton = timerButtons.find(btn => btn.isCustom);
+                customTimerDialog.close();
+                startTimer(duration, customButton.color);
+            }
+        });
+
+        cancelCustomTimerBtn.addEventListener('click', () => {
+            customTimerDialog.close();
+        });
+
+        // Handle Enter key in the input
+        minutesInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                startCustomTimerBtn.click();
+            }
         });
 
         endScreen.addEventListener('click', resetApp);
