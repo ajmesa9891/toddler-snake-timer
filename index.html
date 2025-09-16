@@ -52,7 +52,7 @@
 
     <!-- Selection Screen -->
     <div id="selection-screen" class="screen visible p-4 sm:p-8">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-sm sm:max-w-2xl mx-auto">
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 sm:gap-6 w-full max-w-sm sm:max-w-4xl mx-auto">
             <div id="timer-30" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
                 <canvas id="canvas-30"></canvas>
             </div>
@@ -64,6 +64,9 @@
             </div>
             <div id="timer-120" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
                 <canvas id="canvas-120"></canvas>
+            </div>
+            <div id="timer-180" class="canvas-container cursor-pointer rounded-full bg-yellow-100 shadow-lg hover:shadow-xl transition-shadow">
+                <canvas id="canvas-180"></canvas>
             </div>
         </div>
     </div>
@@ -93,7 +96,8 @@
             { id: 'timer-30', duration: 30, canvasId: 'canvas-30', color: '#FBBF24' }, // Amber Yellow
             { id: 'timer-60', duration: 60, canvasId: 'canvas-60', color: '#4ADE80' }, // Green
             { id: 'timer-90', duration: 90, canvasId: 'canvas-90', color: '#60A5FA' },   // Blue
-            { id: 'timer-120', duration: 120, canvasId: 'canvas-120', color: '#F87171' } // Red
+            { id: 'timer-120', duration: 120, canvasId: 'canvas-120', color: '#F87171' }, // Red
+            { id: 'timer-180', duration: 180, canvasId: 'canvas-180', color: '#A855F7' } // Purple
         ];
         
         const timerCanvas = document.getElementById('timer-canvas');
@@ -215,6 +219,12 @@
             canvas.getContext('2d').scale(window.devicePixelRatio, window.devicePixelRatio);
         }
 
+        function getDurationFromCanvasId(canvasId) {
+            // Extract duration from canvas ID (e.g., 'canvas-30' -> 30)
+            const match = canvasId.match(/canvas-(\d+)/);
+            return match ? parseInt(match[1]) : null;
+        }
+
         function drawStaticSnake(canvasId, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -254,6 +264,24 @@
             ctx.arc(headX + eyeOffsetX, headY + eyeOffsetY, eyeRadius / 2, 0, 2 * Math.PI);
             ctx.arc(headX - eyeOffsetX, headY - eyeOffsetY, eyeRadius / 2, 0, 2 * Math.PI);
             ctx.fill();
+
+            // Add timer duration text in the center
+            const duration = getDurationFromCanvasId(canvasId);
+            if (duration) {
+                let displayText;
+                if (duration === 30) {
+                    displayText = "30s";
+                } else {
+                    const minutes = duration / 60;
+                    displayText = minutes % 1 === 0 ? `${minutes}m` : `${minutes}m`;
+                }
+                
+                ctx.fillStyle = color;
+                ctx.font = `bold ${size * 0.15}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(displayText, center, center);
+            }
         }
 
         function drawHappySnakeFace() {
